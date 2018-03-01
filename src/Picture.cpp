@@ -37,6 +37,18 @@ namespace PicJS {
         constructorTemplate->SetClassName(String::NewFromUtf8(isolate, "Picture"));
         constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
+        //Picture.width (accessor)
+        constructorTemplate->InstanceTemplate()->SetAccessor(
+            String::NewFromUtf8(isolate, "width"),
+            GetWidth
+        );
+        //Picture.height (accessor)
+        constructorTemplate->InstanceTemplate()->SetAccessor(
+            String::NewFromUtf8(isolate, "height"),
+            GetHeight
+        );
+
+        //Assign prototype methods
         NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "setPixel", SetPixel);
         NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "getPixel", GetPixel);
 
@@ -133,6 +145,16 @@ namespace PicJS {
 
         args.GetReturnValue().Set(Uint32::New(isolate, color));
 
+    }
+
+    void Picture::GetWidth(Local<Name> property, const PropertyCallbackInfo<Value>& info) {
+        Picture* picture = ObjectWrap::Unwrap<Picture>(info.This());
+        info.GetReturnValue().Set(Uint32::New(info.GetIsolate(), picture->width));
+    }
+
+    void Picture::GetHeight(Local<Name> property, const PropertyCallbackInfo<Value>& info) {
+        Picture* picture = ObjectWrap::Unwrap<Picture>(info.This());
+        info.GetReturnValue().Set(Uint32::New(info.GetIsolate(), picture->height));
     }
 
 }

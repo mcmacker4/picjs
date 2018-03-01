@@ -37,6 +37,10 @@ namespace PicJS {
         static void SetPixel(const FunctionCallbackInfo<Value>& args);
         static void GetPixel(const FunctionCallbackInfo<Value>& args);
 
+        //Getters, used for accessors
+        static void GetWidth(Local<Name> property, const PropertyCallbackInfo<Value>& info);
+        static void GetHeight(Local<Name> property, const PropertyCallbackInfo<Value>& info);
+
     };
 
 }
