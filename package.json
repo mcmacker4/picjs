@@ -1,0 +1,20 @@
+{
+  "name": "picjs",
+  "version": "0.1.0",
+  "description": "Image manipulation tools.",
+  "main": "index.js",
+  "scripts": {
+    "build": "node-gyp build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcmacker4/picjs.git"
+  },
+  "author": "mcmacker4",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/mcmacker4/picjs/issues"
+  },
+  "homepage": "https://github.com/mcmacker4/picjs#readme",
+  "devDependencies": {}
+}
