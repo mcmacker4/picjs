@@ -9,20 +9,34 @@ using namespace node;
 
 namespace PicJS {
 
+    enum Channel {
+        RED = 0,
+        GREEN,
+        BLUE,
+        ALPHA
+    };
+
+    typedef union {
+        uint8_t channels[4];
+        uint32_t value;
+
+        inline void set(Channel channel, uint8_t value);
+    } Pixel;
+
     class Picture : public ObjectWrap {
 
     // Class stuff
     private:
 
-        uint32_t* buffer;
+        Pixel* pixels;
         uint32_t width;
         uint32_t height;
         
         explicit Picture(uint32_t width, uint32_t height);
         ~Picture();
 
-        void setPixel(uint32_t x, uint32_t y, uint32_t color);
-        uint32_t getPixel(uint32_t x, uint32_t y);
+        inline void setPixel(uint32_t x, uint32_t y, Channel channel, uint32_t value);
+        inline Pixel* getPixel(uint32_t x, uint32_t y);
 
     // NodeJS Stuff
     public:

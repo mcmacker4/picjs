@@ -4,24 +4,29 @@
 
 namespace PicJS {
 
+    void Pixel::set(Channel channel, uint8_t value) {
+        this->channels[channel] = value;
+    }
+
     // Class methods
     Picture::Picture(uint32_t width, uint32_t height) {
         this->width = width;
         this->height = height;
-        this->buffer = new uint32_t[width*height];
-        memset(this->buffer, 0x00, width * height * sizeof(int32_t));
+        this->pixels = new Pixel[width*height];
+        memset(this->pixels, 0x00, width * height * sizeof(int32_t));
     }
 
     Picture::~Picture() {
-        delete [] this->buffer;
+        delete [] this->pixels;
     }
 
-    void Picture::setPixel(uint32_t x, uint32_t y, uint32_t color) {
-        this->buffer[y * this->width + x] = color; 
+    inline void Picture::setPixel(uint32_t x, uint32_t y, Channel channel, uint32_t value) {
+        value = value < 0xFF ? value : 0xFF;
+        this->getPixel(x, y)->set(channel, (uint8_t) (value & 0xFF));
     }
 
-    uint32_t Picture::getPixel(uint32_t x, uint32_t y) {
-        return this->buffer[y * this->width + x];
+    inline Pixel* Picture::getPixel(uint32_t x, uint32_t y) {
+        return this->pixels + (y * this->width + x);
     }
 
     // NodeJS Stuff
@@ -39,14 +44,10 @@ namespace PicJS {
 
         //Picture.width (accessor)
         constructorTemplate->InstanceTemplate()->SetAccessor(
-            String::NewFromUtf8(isolate, "width"),
-            GetWidth
-        );
+            String::NewFromUtf8(isolate, "width"), GetWidth);
         //Picture.height (accessor)
         constructorTemplate->InstanceTemplate()->SetAccessor(
-            String::NewFromUtf8(isolate, "height"),
-            GetHeight
-        );
+            String::NewFromUtf8(isolate, "height"), GetHeight);
 
         //Assign prototype methods
         NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "setPixel", SetPixel);
@@ -104,7 +105,7 @@ namespace PicJS {
         }
 
         //Invalid argument types
-        if(!args[0]->IsUint32() || !args[1]->IsUint32() || !args[2]->IsUint32()) {
+        if(!args[0]->IsUint32() || !args[1]->IsUint32() || !args[2]->IsObject()) {
             isolate->ThrowException(Exception::Error(
                 String::NewFromUtf8(isolate, "Invalid argument type. Expected three integers.")));
             return;
@@ -112,10 +113,25 @@ namespace PicJS {
 
         uint32_t x = args[0]->Uint32Value();
         uint32_t y = args[1]->Uint32Value();
-        uint32_t color = args[2]->Uint32Value();
+        Local<Object> jsPixel = args[2]->ToObject(isolate);
 
         Picture* picture = ObjectWrap::Unwrap<Picture>(args.This());
-        picture->setPixel(x, y, color);
+
+        Local<Value> jsRed = jsPixel->Get(String::NewFromUtf8(isolate, "red"));
+        if(jsRed->IsUint32() && !jsRed->IsNull())
+            picture->setPixel(x, y, RED, jsRed->Uint32Value());
+        
+        Local<Value> jsGreen = jsPixel->Get(String::NewFromUtf8(isolate, "green"));
+        if(jsGreen->IsUint32() && !jsRed->IsNull())
+            picture->setPixel(x, y, GREEN, jsGreen->Uint32Value());
+
+        Local<Value> jsBlue = jsPixel->Get(String::NewFromUtf8(isolate, "blue"));
+        if(jsBlue->IsUint32() && !jsBlue->IsNull())
+            picture->setPixel(x, y, BLUE, jsBlue->Uint32Value());
+        
+        Local<Value> jsAlpha = jsPixel->Get(String::NewFromUtf8(isolate, "alpha"));
+        if(jsAlpha->IsUint32() && !jsAlpha->IsNull())
+            picture->setPixel(x, y, ALPHA, jsAlpha->Uint32Value());
 
     }
 
@@ -141,9 +157,17 @@ namespace PicJS {
         uint32_t y = args[1]->Uint32Value();
 
         Picture* picture = ObjectWrap::Unwrap<Picture>(args.This());
-        uint32_t color = picture->getPixel(x, y);
+        Pixel* pixel = picture->getPixel(x, y);
 
-        args.GetReturnValue().Set(Uint32::New(isolate, color));
+        Local<Object> pixelObj = Object::New(isolate);
+        pixelObj->Set(String::NewFromUtf8(isolate, "red"), Uint32::New(isolate, pixel->channels[RED]));
+        pixelObj->Set(String::NewFromUtf8(isolate, "green"), Uint32::New(isolate, pixel->channels[GREEN]));
+        pixelObj->Set(String::NewFromUtf8(isolate, "blue"), Uint32::New(isolate, pixel->channels[BLUE]));
+        pixelObj->Set(String::NewFromUtf8(isolate, "alpha"), Uint32::New(isolate, pixel->channels[ALPHA]));
+
+        pixelObj->Set(String::NewFromUtf8(isolate, "uintValue"), Uint32::New(isolate, pixel->value));
+
+        args.GetReturnValue().Set(pixelObj);
 
     }
 
