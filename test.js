@@ -6,3 +6,7 @@ pic.setPixel(0, 0, { red: 255, alpha: 127 })
 console.log(JSON.stringify(
     pic.getPixel(0, 0)
 ))
+
+console.log(JSON.stringify(
+    pic.getPixel(900, 900)
+))

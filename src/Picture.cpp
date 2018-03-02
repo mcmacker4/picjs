@@ -4,16 +4,23 @@
 
 namespace PicJS {
 
+    /*
+    Pixel union methods
+    */
+
     void Pixel::set(Channel channel, uint8_t value) {
         this->channels[channel] = value;
     }
 
-    // Class methods
+    /*
+    Picture Class methods
+    */
+
     Picture::Picture(uint32_t width, uint32_t height) {
         this->width = width;
         this->height = height;
         this->pixels = new Pixel[width*height];
-        memset(this->pixels, 0x00, width * height * sizeof(int32_t));
+        memset(this->pixels, 0x00, width * height * sizeof(Pixel));
     }
 
     Picture::~Picture() {
@@ -21,11 +28,13 @@ namespace PicJS {
     }
 
     inline void Picture::setPixel(uint32_t x, uint32_t y, Channel channel, uint32_t value) {
+        if(x >= this->width || y >= this->height) return;
         value = value < 0xFF ? value : 0xFF;
         this->getPixel(x, y)->set(channel, (uint8_t) (value & 0xFF));
     }
 
     inline Pixel* Picture::getPixel(uint32_t x, uint32_t y) {
+        if(x >= this->width || y >= this->height) return nullptr;
         return this->pixels + (y * this->width + x);
     }
 
@@ -158,6 +167,11 @@ namespace PicJS {
 
         Picture* picture = ObjectWrap::Unwrap<Picture>(args.This());
         Pixel* pixel = picture->getPixel(x, y);
+
+        if(pixel == nullptr) {
+            args.GetReturnValue().SetNull();
+            return;
+        }
 
         Local<Object> pixelObj = Object::New(isolate);
         pixelObj->Set(String::NewFromUtf8(isolate, "red"), Uint32::New(isolate, pixel->channels[RED]));
