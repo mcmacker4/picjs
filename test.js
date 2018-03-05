@@ -10,3 +10,6 @@ console.log(JSON.stringify(
 console.log(JSON.stringify(
     pic.getPixel(900, 900)
 ))
+
+pic.resize(80, 60)
+console.log("(", pic.width, ",", pic.height, ")")
