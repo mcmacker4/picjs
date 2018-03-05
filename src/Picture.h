@@ -38,6 +38,8 @@ namespace PicJS {
         inline void setPixel(uint32_t x, uint32_t y, Channel channel, uint32_t value);
         inline Pixel* getPixel(uint32_t x, uint32_t y);
 
+        void resize(uint32_t newWidth, uint32_t newHeight);
+
     // NodeJS Stuff
     public:
         
@@ -47,9 +49,11 @@ namespace PicJS {
 
         static Persistent<Function> constructor;
 
+        //Node class methods
         static void New(const FunctionCallbackInfo<Value>& args);
         static void SetPixel(const FunctionCallbackInfo<Value>& args);
         static void GetPixel(const FunctionCallbackInfo<Value>& args);
+        static void Resize(const FunctionCallbackInfo<Value>& args);
 
         //Getters, used for accessors
         static void GetWidth(Local<Name> property, const PropertyCallbackInfo<Value>& info);

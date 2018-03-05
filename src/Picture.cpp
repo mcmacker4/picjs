@@ -38,6 +38,35 @@ namespace PicJS {
         return this->pixels + (y * this->width + x);
     }
 
+    void Picture::resize(uint32_t newWidth, uint32_t newHeight) {
+
+        //Allocate new buffer
+        Pixel *newBuffer = new Pixel[newWidth * newHeight];
+        memset(newBuffer, 0x0, newWidth * newHeight * sizeof(Pixel));
+
+        //Calculate limits to avoid out-of-bounds reading and writing
+        uint32_t maxWidth = this->width < newWidth ? this->width : newWidth;
+        uint32_t maxHeight = this->height < newHeight ? this->height : newHeight;
+
+        //Copy pixel by pixel, i'm sure there is a better way, but why should i care?
+        for(uint32_t x = 0; x < maxWidth; x++) {
+            for(uint32_t y = 0; y < maxHeight; y++) {
+                newBuffer[y * newWidth + x] = this->pixels[y * this->width + x];
+            }
+        }
+
+        Pixel* oldBuffer = this->pixels;
+
+        //Set new data
+        this->pixels = newBuffer;
+        this->width = newWidth;
+        this->height = newHeight;
+
+        //Unallocate old buffer
+        delete [] oldBuffer;
+
+    }
+
     // NodeJS Stuff
 
     Persistent<Function> Picture::constructor;
@@ -61,6 +90,7 @@ namespace PicJS {
         //Assign prototype methods
         NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "setPixel", SetPixel);
         NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "getPixel", GetPixel);
+        NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "resize", Resize);
 
         constructor.Reset(isolate, constructorTemplate->GetFunction());
         exports->Set(String::NewFromUtf8(isolate, "Picture"), constructorTemplate->GetFunction());
@@ -79,16 +109,9 @@ namespace PicJS {
         }
 
         //Not enough arguments
-        if(args.Length() < 2) {
+        if(args.Length() < 2 || !args[0]->IsUint32() || !args[1]->IsUint32()) {
             isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid number of arguments. Expected two integers.")));
-            return;
-        }
-
-        //Invalid argument type
-        if(!args[0]->IsUint32() || !args[1]->IsUint32()) {
-            isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid argument type. Expected two integers.")));
+                String::NewFromUtf8(isolate, "ArgumentException. Expected two integers.")));
             return;
         }
         
@@ -107,16 +130,9 @@ namespace PicJS {
         Isolate* isolate = args.GetIsolate();
 
         //Not enough arguments
-        if(args.Length() < 3) {
+        if(args.Length() < 3 || !args[0]->IsUint32() || !args[1]->IsUint32() || !args[2]->IsObject()) {
             isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid number of arguments. Expected three integers.")));
-            return;
-        }
-
-        //Invalid argument types
-        if(!args[0]->IsUint32() || !args[1]->IsUint32() || !args[2]->IsObject()) {
-            isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid argument type. Expected three integers.")));
+                String::NewFromUtf8(isolate, "ArgumentException. Usage: setPixel(width: Int, height: Int, pixel: Object).")));
             return;
         }
 
@@ -149,16 +165,9 @@ namespace PicJS {
         Isolate* isolate = args.GetIsolate();
 
         //Not enough arguments
-        if(args.Length() < 2) {
+        if(args.Length() < 2 || !args[0]->IsUint32() || !args[1]->IsUint32()) {
             isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid number of arguments. Expected two integers.")));
-            return;
-        }
-
-        //Invalid argument types
-        if(!args[0]->IsUint32() || !args[1]->IsUint32()) {
-            isolate->ThrowException(Exception::Error(
-                String::NewFromUtf8(isolate, "Invalid argument type. Expected two integers.")));
+                String::NewFromUtf8(isolate, "ArgumentException. Expected two integers.")));
             return;
         }
 
@@ -182,6 +191,24 @@ namespace PicJS {
         pixelObj->Set(String::NewFromUtf8(isolate, "uintValue"), Uint32::New(isolate, pixel->value));
 
         args.GetReturnValue().Set(pixelObj);
+
+    }
+
+    void Picture::Resize(const FunctionCallbackInfo<Value>& args) {
+
+        Isolate* isolate = args.GetIsolate();
+        
+        //Check arguments
+        if(args.Length() < 2 || !args[0]->IsUint32() || !args[1]->IsUint32()) {
+            isolate->ThrowException(Exception::Error(
+                String::NewFromUtf8(isolate, "ArgumentException. Usage: resize(newWidth: Int, newHeight: Int).")));
+        }
+
+        Picture* picture = ObjectWrap::Unwrap<Picture>(args.This());
+        uint32_t newWidth = args[0]->Uint32Value();
+        uint32_t newHeight = args[1]->Uint32Value();
+
+        picture->resize(newWidth, newHeight);
 
     }
 
