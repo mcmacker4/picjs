@@ -4,7 +4,8 @@
   "description": "Image manipulation tools.",
   "main": "index.js",
   "scripts": {
-    "build": "node-gyp build"
+    "build": "node-gyp rebuild",
+    "test": "./node_modules/.bin/node-gyp rebuild && node ./test.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +17,7 @@
     "url": "https://github.com/mcmacker4/picjs/issues"
   },
   "homepage": "https://github.com/mcmacker4/picjs#readme",
-  "devDependencies": {}
+  "devDependencies": {
+    "node-gyp": "^3.6.2"
+  }
 }
